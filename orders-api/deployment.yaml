@@ -4,7 +4,7 @@ metadata:
   name: orders-api
   namespace: orders
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: orders-api
@@ -17,6 +17,19 @@ spec:
         prometheus.io/path:   "/actuator/prometheus"
         prometheus.io/port:   "8090"
     spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Esperando a PostgreSQL..."
+              until nc -z postgres 5432; do
+                echo "postgres no disponible, reintentando en 3s..."
+                sleep 3
+              done
+              echo "PostgreSQL listo!"
       containers:
         - name: orders-api
           image: orders-api:1.0.0
