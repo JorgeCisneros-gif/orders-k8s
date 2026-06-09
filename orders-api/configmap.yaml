@@ -7,3 +7,4 @@ data:
   DB_HOST: postgres
   DB_PORT: "5432"
   DB_NAME: orders_db
+  KEYCLOAK_ISSUER_URI: http://keycloak:8180/realms/orders-realm
