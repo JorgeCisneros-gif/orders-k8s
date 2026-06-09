@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: orders
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: postgres-secret
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: init-schema
+              mountPath: /docker-entrypoint-initdb.d/01-schema.sql
+              subPath: schema.sql
+            - name: init-seed
+              mountPath: /docker-entrypoint-initdb.d/02-seed.sql
+              subPath: seed.sql
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "ordersuser", "-d", "orders_db"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "ordersuser", "-d", "orders_db"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: postgres-data
+          emptyDir: {}
+        - name: init-schema
+          configMap:
+            name: postgres-init
+            items:
+              - key: schema.sql
+                path: schema.sql
+        - name: init-seed
+          configMap:
+            name: postgres-init
+            items:
+              - key: seed.sql
+                path: seed.sql
