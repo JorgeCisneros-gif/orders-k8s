@@ -16,7 +16,7 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0.4
-          args: ["start-dev"]
+          args: ["start-dev", "--db=dev-file"]
           env:
             - name: KEYCLOAK_ADMIN
               value: "admin"
@@ -30,11 +30,13 @@ spec:
               value: "false"
             - name: KC_HTTP_ENABLED
               value: "true"
-            # Limitar memoria JVM para que no exceda el límite del pod
             - name: JAVA_OPTS_APPEND
               value: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m"
           ports:
             - containerPort: 8180
+          volumeMounts:
+            - name: keycloak-data
+              mountPath: /opt/keycloak/data
           readinessProbe:
             httpGet:
               path: /realms/master
@@ -56,3 +58,7 @@ spec:
             limits:
               memory: "1.5Gi"
               cpu: "500m"
+      volumes:
+        - name: keycloak-data
+          persistentVolumeClaim:
+            claimName: keycloak-pvc
