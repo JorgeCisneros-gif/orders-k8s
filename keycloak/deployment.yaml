@@ -30,20 +30,23 @@ spec:
               value: "false"
             - name: KC_HTTP_ENABLED
               value: "true"
+            # Limitar memoria JVM para que no exceda el límite del pod
+            - name: JAVA_OPTS_APPEND
+              value: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m"
           ports:
             - containerPort: 8180
           readinessProbe:
             httpGet:
               path: /realms/master
               port: 8180
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 15
             failureThreshold: 10
           livenessProbe:
             httpGet:
               path: /realms/master
               port: 8180
-            initialDelaySeconds: 90
+            initialDelaySeconds: 120
             periodSeconds: 20
             failureThreshold: 5
           resources:
@@ -51,5 +54,5 @@ spec:
               memory: "512Mi"
               cpu: "250m"
             limits:
-              memory: "1Gi"
+              memory: "1.5Gi"
               cpu: "500m"
